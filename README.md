@@ -1,8 +1,11 @@
 # ecommerce
 
+Database có tên ecommerce.sql
 
 
+#Sơ đồ dataBase
 
+![image](https://github.com/thothang/ecommerce/assets/125228484/246ff0b2-4cbb-4852-8689-45a13ee7a9d3)
 
 #PostMan
 Test Resgister
@@ -25,7 +28,5 @@ Dữ liệu ở bảng order
 
 ![image](https://github.com/thothang/ecommerce/assets/125228484/19a8f7db-e832-43ad-b61a-dd04aeea8733)
 
-#Sơ đồ dataBase
 
-![image](https://github.com/thothang/ecommerce/assets/125228484/246ff0b2-4cbb-4852-8689-45a13ee7a9d3)
 
