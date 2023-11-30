@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="CSS/style.css"/>
+
+</head>
+<body>
+<form class="form" method="post" name="login">
+    <h1 class="login-title">Đăng nhập</h1>
+    <label for="username">Username:</label>
+    <input type="text" class="login-input" id="username" required name="username" placeholder="Tên đăng nhập" autofocus="true"><br>
+    <label for="password">Password:</label>
+    <input type="password" class="login-input" id="password" required name="password" placeholder="Mật khẩu"><br>
+    <button type="button" onclick="login()" class="login-button" >Login</button>
+</form>
+
+<script>
+    function login() {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        const loginBody = {
+            username: username,
+            password: password
+        };
+
+        fetch('http://localhost:8080/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(loginBody),
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                if (data && data.jwt) {
+                    window.location.href = 'http://facebook.com';
+                } else {
+                    console.error('Login failed');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+</script>
+</body>
+</html>
