@@ -1,11 +1,20 @@
 package com.tutorial.ecommerce.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+
 
 @Entity
 @Table(name = "address")
 public class Address {
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,7 +41,6 @@ public class Address {
     public LocalUser getUser() {
         return user;
     }
-
     public void setUser(LocalUser user) {
         this.user = user;
     }
@@ -69,7 +77,6 @@ public class Address {
         this.addressLine1 = addressLine1;
     }
 
-
     public Long getId() {
         return id;
     }
@@ -77,5 +84,6 @@ public class Address {
     public void setId(Long id) {
         this.id = id;
     }
+
 
 }

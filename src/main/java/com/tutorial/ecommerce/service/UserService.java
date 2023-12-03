@@ -1,8 +1,10 @@
 package com.tutorial.ecommerce.service;
 
 import com.tutorial.ecommerce.api.model.LoginBody;
+import com.tutorial.ecommerce.api.model.PasswordResetBody;
 import com.tutorial.ecommerce.api.model.RegistrationBody;
 import com.tutorial.ecommerce.exception.EmailFailureException;
+import com.tutorial.ecommerce.exception.EmailNotFoundException;
 import com.tutorial.ecommerce.exception.UserAlreadyExistsException;
 import com.tutorial.ecommerce.exception.UserNotVerifiedException;
 import com.tutorial.ecommerce.model.LocalUser;
@@ -16,18 +18,20 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 
+
 @Service
 public class UserService {
 
+
     private LocalUserDAO localUserDAO;
+
+    private VerificationTokenDAO verificationTokenDAO;
 
     private EncryptionService encryptionService;
 
     private JWTService jwtService;
+
     private EmailService emailService;
-
-    private VerificationTokenDAO verificationTokenDAO;
-
 
     public UserService(LocalUserDAO localUserDAO, VerificationTokenDAO verificationTokenDAO, EncryptionService encryptionService,
                        JWTService jwtService, EmailService emailService) {
@@ -46,14 +50,22 @@ public class UserService {
         LocalUser user = new LocalUser();
         user.setEmail(registrationBody.getEmail());
         user.setUsername(registrationBody.getUsername());
-        user.setFirstname(registrationBody.getFirstName());
-        user.setLastname(registrationBody.getLastName());
+        user.setFirstName(registrationBody.getFirstName());
+        user.setLastName(registrationBody.getLastName());
         user.setPassword(encryptionService.encryptPassword(registrationBody.getPassword()));
         VerificationToken verificationToken = createVerificationToken(user);
         emailService.sendVerificationEmail(verificationToken);
         return localUserDAO.save(user);
     }
 
+    private VerificationToken createVerificationToken(LocalUser user) {
+        VerificationToken verificationToken = new VerificationToken();
+        verificationToken.setToken(jwtService.generateVerificationJWT(user));
+        verificationToken.setCreatedTimestamp(new Timestamp(System.currentTimeMillis()));
+        verificationToken.setUser(user);
+        user.getVerificationTokens().add(verificationToken);
+        return verificationToken;
+    }
 
     public String loginUser(LoginBody loginBody) throws UserNotVerifiedException, EmailFailureException {
         Optional<LocalUser> opUser = localUserDAO.findByUsernameIgnoreCase(loginBody.getUsername());
@@ -78,15 +90,6 @@ public class UserService {
         return null;
     }
 
-    private VerificationToken createVerificationToken(LocalUser user) {
-        VerificationToken verificationToken = new VerificationToken();
-        verificationToken.setToken(jwtService.generateVerificationJWT(user));
-        verificationToken.setCreatedTimestamp(new Timestamp(System.currentTimeMillis()));
-        verificationToken.setUser(user);
-        user.getVerificationTokens().add(verificationToken);
-        return verificationToken;
-    }
-
     @Transactional
     public boolean verifyUser(String token) {
         Optional<VerificationToken> opToken = verificationTokenDAO.findByToken(token);
@@ -103,6 +106,30 @@ public class UserService {
         return false;
     }
 
+    public void forgotPassword(String email) throws EmailNotFoundException, EmailFailureException {
+        Optional<LocalUser> opUser = localUserDAO.findByEmailIgnoreCase(email);
+        if (opUser.isPresent()) {
+            LocalUser user = opUser.get();
+            String token = jwtService.generatePasswordResetJWT(user);
+            emailService.sendPasswordResetEmail(user, token);
+        } else {
+            throw new EmailNotFoundException();
+        }
+    }
 
+    public void resetPassword(PasswordResetBody body) {
+        String email = jwtService.getResetPasswordEmail(body.getToken());
+        Optional<LocalUser> opUser = localUserDAO.findByEmailIgnoreCase(email);
+        if (opUser.isPresent()) {
+            LocalUser user = opUser.get();
+            user.setPassword(encryptionService.encryptPassword(body.getPassword()));
+            localUserDAO.save(user);
+        }
+    }
+
+    public boolean userHasPermissionToUser(LocalUser user, Long id) {
+        return user.getId() == id;
+    }
 
 }
+
